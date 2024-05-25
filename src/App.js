@@ -1,14 +1,31 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { createWorker } from 'tesseract.js';
 import './App.css';
 
 function App() {
   const [selectedImage, setSelectedImage] = useState(null);
-  const [textResult, setTextResult] = useState(
-    'Lorem ipsum dolor sit amet consectetur adipisicing elit. Reprehenderit dolor obcaecati quidem rerum adipisci magni impedit possimus dolorum sit unde.'
-  );
+  const [textResult, setTextResult] = useState('');
+
+  const convertImageToText = useCallback(async () => {
+    if (selectedImage) {
+      const worker = await createWorker('eng');
+      const { data } = await worker.recognize(selectedImage);
+      setTextResult(data.text);
+      await worker.terminate();
+    }
+  }, [selectedImage]);
+
+  useEffect(() => {
+    convertImageToText();
+  }, [selectedImage, convertImageToText]);
 
   const handleUpload = (event) => {
-    setSelectedImage(event.target.files[0]);
+    if (event.target.files[0]) {
+      setSelectedImage(event.target.files[0]);
+    } else {
+      setSelectedImage(null);
+      setTextResult('');
+    }
   };
 
   return (
